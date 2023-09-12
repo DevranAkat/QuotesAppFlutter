@@ -93,7 +93,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 color: Colors.blue, // Customize header color
               ),
               child: Text(
-                'Left Menu Header',
+                'Motivation Quotes',
                 style: TextStyle(
                   color: Colors.white, // Text color
                   fontSize: 24.0,
@@ -101,13 +101,15 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
             ListTile(
-              title: const Text('Menu Item 1'),
+              title: const Text('Home'),
+              trailing: const Icon(Icons.home),
               onTap: () {
                 // Add logic for handling menu item 1
               },
             ),
             ListTile(
-              title: const Text('Menu Item 2'),
+              title: const Text('Favorites'),
+              trailing: const Icon(Icons.favorite),
               onTap: () {
                 // Add logic for handling menu item 2
               },
