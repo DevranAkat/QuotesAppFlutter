@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:motivation/quotes/quote.dart';
 import 'package:motivation/widgets/left_menu.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -10,7 +12,23 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-  bool isLiked = false; // Track the liked state
+  final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  bool isLiked = false;
+  int currentQuoteIndex = 0;
+
+  void checkIfLiked() async{
+    final SharedPreferences prefs = await _prefs;
+    var likedQuotesList = prefs.getStringList("likedQuotes") ?? [];
+    if (likedQuotesList.contains(currentQuoteIndex.toString())) {
+      setState(() {
+        isLiked = true;
+      });
+      isLiked = true;
+    }
+    else{
+      isLiked = false;
+    }
+  }
 
   void _openDrawer() {
     _scaffoldKey.currentState?.openDrawer();
@@ -41,14 +59,21 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _toggleLike() {
+  Future<void> _toggleLike(id) async {
+    final SharedPreferences prefs = await _prefs;
+    var likedQuotes = prefs.getStringList("likedQuotes") ?? [];
+    isLiked ? likedQuotes.remove(id.toString()) : likedQuotes.add(id.toString());
+    prefs.setStringList("likedQuotes", likedQuotes);
+    print(prefs.getStringList("likedQuotes"));
+
     setState(() {
-      isLiked = !isLiked; // Toggle the liked state
+      isLiked = !isLiked;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    checkIfLiked();
     return Scaffold(
       backgroundColor: Colors.black, // Dark background color
       key: _scaffoldKey,
@@ -73,10 +98,10 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const SizedBox(height: 20.0), // Space to move quote up
-            const Text(
-              "Your Motivational Quote Goes Here",
-              style: TextStyle(
+            const SizedBox(height: 50.0), // Space to move quote up
+            Text(
+              quotes[currentQuoteIndex].text,
+              style: const TextStyle(
                 color: Colors.white, // Text color
                 fontSize: 24.0, // Adjust font size as needed
               ),
@@ -93,7 +118,7 @@ class _HomePageState extends State<HomePage> {
                         isLiked ? Icons.favorite : Icons.favorite_border,
                         color: isLiked ? Colors.red : Colors.white,
                       ), // Heart-shaped like button
-                      onPressed:  _toggleLike,
+                      onPressed: () =>  _toggleLike(currentQuoteIndex),
                     ),
                     const Text(
                       'Like', // Text under the like button
@@ -119,6 +144,30 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                   ],
+                ),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      currentQuoteIndex = currentQuoteIndex - 1;
+                    });
+                    checkIfLiked();
+                  },
+                  child: const Text('Previous  Quote'),
+                ),
+                const SizedBox(width: 10),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      currentQuoteIndex = currentQuoteIndex + 1;
+                    });
+                    checkIfLiked();
+                  },
+                  child: const Text('Next Quote'),
                 ),
               ],
             ),
