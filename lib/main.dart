@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/categories_page.dart';
 import 'screens/favorites_page.dart';
 import 'screens/home_page.dart';

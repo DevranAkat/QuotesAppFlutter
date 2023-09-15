@@ -11,7 +11,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   bool isLiked = false;
   int currentQuoteIndex = 0;
@@ -23,15 +22,22 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         isLiked = true;
       });
-      isLiked = true;
     }
     else{
       isLiked = false;
     }
   }
 
-  void _openDrawer() {
-    _scaffoldKey.currentState?.openDrawer();
+  Future<void> _toggleLike(id) async {
+    final SharedPreferences prefs = await _prefs;
+    var likedQuotes = prefs.getStringList("likedQuotes") ?? [];
+    isLiked ? likedQuotes.remove(id.toString()) : likedQuotes.add(id.toString());
+    prefs.setStringList("likedQuotes", likedQuotes);
+    print(prefs.getStringList("likedQuotes")); //TODO: Remove this
+
+    setState(() {
+      isLiked = !isLiked;
+    });
   }
 
   void _openSettingsPanel(BuildContext context) {
@@ -59,31 +65,14 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Future<void> _toggleLike(id) async {
-    final SharedPreferences prefs = await _prefs;
-    var likedQuotes = prefs.getStringList("likedQuotes") ?? [];
-    isLiked ? likedQuotes.remove(id.toString()) : likedQuotes.add(id.toString());
-    prefs.setStringList("likedQuotes", likedQuotes);
-    print(prefs.getStringList("likedQuotes"));
-
-    setState(() {
-      isLiked = !isLiked;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     checkIfLiked();
     return Scaffold(
       backgroundColor: Colors.black, // Dark background color
-      key: _scaffoldKey,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.menu), 
-          onPressed: _openDrawer,
-        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_active), 
@@ -99,13 +88,16 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const SizedBox(height: 50.0), // Space to move quote up
-            Text(
-              quotes[currentQuoteIndex].text,
-              style: const TextStyle(
-                color: Colors.white, // Text color
-                fontSize: 24.0, // Adjust font size as needed
+            Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Text(
+                quotes[currentQuoteIndex].text,
+                style: const TextStyle(
+                  color: Colors.white, // Text color
+                  fontSize: 20.0, // Adjust font size as needed
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20.0), // Space between quote and buttons
             Row(
@@ -147,6 +139,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
+            const SizedBox(height: 50.0),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
