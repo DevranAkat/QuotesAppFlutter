@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:motivation/widgets/left_menu.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../quotes/quote.dart';
+import '../widgets/favorite_icon.dart';
 
 class FavoritesPage extends StatelessWidget {
   const FavoritesPage({super.key});
@@ -16,7 +16,7 @@ class FavoritesPage extends StatelessWidget {
         elevation: 0,
         title: const Text('Favorites'),
       ),
-      body: LikedQuotes(),
+      body: const LikedQuotes(),
       drawer: const LeftMenu(),
     );
   }
@@ -32,43 +32,42 @@ class LikedQuotes extends StatefulWidget {
 class _LikedQuotesState extends State<LikedQuotes> {
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   var quotesLiked = [];
-  var isLiked = true;
+  List<bool> isLikedList = [];
 
   void getLikedQuotesList() async{
     final SharedPreferences prefs = await _prefs;
     setState(() {
       quotesLiked = prefs.getStringList("likedQuotes") ?? [];
+      isLikedList = quotesLiked.map((id) => true).toList();
     });
   }
 
   Future<void> toggleLike(id) async {
     final SharedPreferences prefs = await _prefs;
     var likedQuotes = prefs.getStringList("likedQuotes") ?? [];
-    isLiked ? likedQuotes.remove(id.toString()) : likedQuotes.add(id.toString());
+    isLikedList[id] ? likedQuotes.remove(id.toString()) : likedQuotes.add(id.toString());;
     prefs.setStringList("likedQuotes", likedQuotes);
 
     setState(() {
-      isLiked = !isLiked;
+      isLikedList[id] = !isLikedList[id]; // Toggle like status for the specific quote
     });
   }
 
   @override
   initState() {
+    super.initState();
     getLikedQuotesList();
   }
   
   @override
   Widget build(BuildContext context) {
     
-
-  // getLikedQuotes();
     return ListView.builder(
       itemCount: quotesLiked.length,
       itemBuilder: (context, index) {
         return ListTile(
           contentPadding: const EdgeInsets.all(16.0),
           title: Text(
-          //quotes[1].text,
           quotes[int.parse(quotesLiked[index])].text,
             style: const TextStyle(
                 color: Colors.white, // Text color
@@ -79,10 +78,7 @@ class _LikedQuotesState extends State<LikedQuotes> {
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                icon: Icon(
-                  isLiked ? Icons.favorite : Icons.favorite_border,
-                  color: isLiked ? Colors.red : Colors.white,
-                ),
+                icon: FavoriteIcon(isLiked: isLikedList[index]),
                 onPressed: () {
                   setState(() {
                     toggleLike(index);

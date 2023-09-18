@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:motivation/quotes/quote.dart';
+import 'package:motivation/widgets/favorite_icon.dart';
 import 'package:motivation/widgets/left_menu.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -33,7 +34,6 @@ class _HomePageState extends State<HomePage> {
     var likedQuotes = prefs.getStringList("likedQuotes") ?? [];
     isLiked ? likedQuotes.remove(id.toString()) : likedQuotes.add(id.toString());
     prefs.setStringList("likedQuotes", likedQuotes);
-    print(prefs.getStringList("likedQuotes")); //TODO: Remove this
 
     setState(() {
       isLiked = !isLiked;
@@ -106,10 +106,7 @@ class _HomePageState extends State<HomePage> {
                 Column(
                   children: [
                     IconButton(
-                      icon: Icon(
-                        isLiked ? Icons.favorite : Icons.favorite_border,
-                        color: isLiked ? Colors.red : Colors.white,
-                      ), // Heart-shaped like button
+                      icon: FavoriteIcon(isLiked: isLiked), // Heart-shaped like button
                       onPressed: () =>  _toggleLike(currentQuoteIndex),
                     ),
                     const Text(
