@@ -16,18 +16,14 @@ class _HomePageState extends State<HomePage> {
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   bool isLiked = false;
   int currentQuoteIndex = 0;
+  int currentQuoteId = 0;
 
   void checkIfLiked() async{
     final SharedPreferences prefs = await _prefs;
     var likedQuotesList = prefs.getStringList("likedQuotes") ?? [];
-    if (likedQuotesList.contains(currentQuoteIndex.toString())) {
-      setState(() {
-        isLiked = true;
-      });
-    }
-    else{
-      isLiked = false;
-    }
+    setState(() {
+      isLiked = likedQuotesList.contains(currentQuoteId.toString());
+    });
   }
 
   Future<void> _toggleLike(id) async {
@@ -35,6 +31,7 @@ class _HomePageState extends State<HomePage> {
     var likedQuotes = prefs.getStringList("likedQuotes") ?? [];
     isLiked ? likedQuotes.remove(id.toString()) : likedQuotes.add(id.toString());
     prefs.setStringList("likedQuotes", likedQuotes);
+    print(likedQuotes);
 
     setState(() {
       isLiked = !isLiked;
@@ -68,6 +65,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    currentQuoteId = randomQuotes[currentQuoteIndex].id;
     checkIfLiked();
     return Scaffold(
       backgroundColor: Colors.black, // Dark background color
@@ -92,7 +90,7 @@ class _HomePageState extends State<HomePage> {
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: Text(
-                quotes[currentQuoteIndex].text,
+                randomQuotes[currentQuoteIndex].text,
                 style: const TextStyle(
                   color: Colors.white, // Text color
                   fontSize: 20.0, // Adjust font size as needed
@@ -108,7 +106,7 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     IconButton(
                       icon: FavoriteIcon(isLiked: isLiked), // Heart-shaped like button
-                      onPressed: () =>  _toggleLike(currentQuoteIndex),
+                      onPressed: () =>  _toggleLike(randomQuotes[currentQuoteIndex].id),
                     ),
                     const Text(
                       'Like', // Text under the like button
@@ -124,7 +122,7 @@ class _HomePageState extends State<HomePage> {
                     IconButton(
                       icon: const Icon(Icons.share, color: Colors.white), // Share button
                       onPressed: () {
-                        Share.share(quotes[currentQuoteIndex].text);
+                        Share.share(randomQuotes[currentQuoteIndex].text);
                       },
                     ),
                     const Text(

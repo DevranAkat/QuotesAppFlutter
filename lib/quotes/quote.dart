@@ -31,3 +31,4 @@ List<Quote> quotes = [
   Quote(id: 19, text: "Success usually comes to those who are too busy to be looking for it.", author: "Henry David Thoreau", category: "Success"),
 ];
 
+List<Quote> randomQuotes = List.from(quotes)..shuffle();

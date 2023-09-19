@@ -62,7 +62,6 @@ class _LikedQuotesState extends State<LikedQuotes> {
   
   @override
   Widget build(BuildContext context) {
-    
     return ListView.builder(
       itemCount: quotesLiked.length,
       itemBuilder: (context, index) {
