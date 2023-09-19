@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:motivation/quotes/quote.dart';
 import 'package:motivation/widgets/favorite_icon.dart';
 import 'package:motivation/widgets/left_menu.dart';
+import 'package:share/share.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
@@ -123,7 +124,7 @@ class _HomePageState extends State<HomePage> {
                     IconButton(
                       icon: const Icon(Icons.share, color: Colors.white), // Share button
                       onPressed: () {
-                        // Add logic for sharing the quote
+                        Share.share(quotes[currentQuoteIndex].text);
                       },
                     ),
                     const Text(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:motivation/widgets/left_menu.dart';
+import 'package:share/share.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../quotes/quote.dart';
 import '../widgets/favorite_icon.dart';
@@ -91,6 +92,7 @@ class _LikedQuotesState extends State<LikedQuotes> {
                   color: Colors.white,
                 ),
                 onPressed: () {
+                  Share.share(quotes[int.parse(quotesLiked[index])].text);
                 },
               ),
             ],
