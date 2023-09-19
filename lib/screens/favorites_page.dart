@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:motivation/widgets/left_menu.dart';
+import 'package:motivation/widgets/share_button.dart';
 import 'package:share/share.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../quotes/quote.dart';
@@ -76,6 +77,7 @@ class _LikedQuotesState extends State<LikedQuotes> {
             ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
                 icon: FavoriteIcon(isLiked: isLikedList[index]),
@@ -85,15 +87,7 @@ class _LikedQuotesState extends State<LikedQuotes> {
                   });
                 },
               ),
-              IconButton(
-                icon: const Icon(
-                  Icons.share,
-                  color: Colors.white,
-                ),
-                onPressed: () {
-                  Share.share(quotes[int.parse(quotesLiked[index])].text);
-                },
-              ),
+              ShareButton(onPressed: () => Share.share(quotes[int.parse(quotesLiked[index])].text)),
             ],
           ),
         );

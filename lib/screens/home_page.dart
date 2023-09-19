@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:motivation/quotes/quote.dart';
-import 'package:motivation/widgets/favorite_icon.dart';
-import 'package:motivation/widgets/left_menu.dart';
 import 'package:share/share.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:motivation/quotes/quote.dart';
+import 'package:motivation/widgets/favorite_icon.dart';
+import 'package:motivation/widgets/left_menu.dart';
+
+import '../widgets/like_button.dart';
+import '../widgets/share_button.dart';
+
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({Key? key}) : super(key: key);
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -14,41 +18,51 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-  bool isLiked = false;
+  List<bool> isLikedList = List.generate(randomQuotes.length, (index) => false);
   int currentQuoteIndex = 0;
-  int currentQuoteId = 0;
 
-  void checkIfLiked() async{
-    final SharedPreferences prefs = await _prefs;
-    var likedQuotesList = prefs.getStringList("likedQuotes") ?? [];
-    setState(() {
-      isLiked = likedQuotesList.contains(currentQuoteId.toString());
-    });
+  @override
+  void initState() {
+    super.initState();
+    checkIfLiked();
   }
 
-  Future<void> _toggleLike(id) async {
+  void checkIfLiked() async {
+    final SharedPreferences prefs = await _prefs;
+    var likedQuotesList = prefs.getStringList("likedQuotes") ?? [];
+
+    for (int i = 0; i < randomQuotes.length; i++) {
+      final int currentQuoteId = randomQuotes[i].id;
+      setState(() {
+        isLikedList[i] = likedQuotesList.contains(currentQuoteId.toString());
+      });
+    }
+  }
+
+  Future<void> _toggleLike(int id) async {
     final SharedPreferences prefs = await _prefs;
     var likedQuotes = prefs.getStringList("likedQuotes") ?? [];
-    isLiked ? likedQuotes.remove(id.toString()) : likedQuotes.add(id.toString());
-    prefs.setStringList("likedQuotes", likedQuotes);
-    print(likedQuotes);
 
-    setState(() {
-      isLiked = !isLiked;
-    });
+    if (likedQuotes.contains(id.toString())) {
+      likedQuotes.remove(id.toString());
+    } else {
+      likedQuotes.add(id.toString());
+    }
+
+    prefs.setStringList("likedQuotes", likedQuotes);
+    checkIfLiked();
   }
 
   void _openSettingsPanel(BuildContext context) {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
-        // Create your settings panel content here
         return Container(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: const [
-               Text(
+              Text(
                 'Settings',
                 style: TextStyle(
                   fontSize: 24.0,
@@ -65,104 +79,126 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    currentQuoteId = randomQuotes[currentQuoteIndex].id;
-    checkIfLiked();
     return Scaffold(
-      backgroundColor: Colors.black, // Dark background color
+      backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_active), 
+            icon: const Icon(Icons.notifications_active),
             onPressed: () {
-              _openSettingsPanel(context); 
+              _openSettingsPanel(context);
             },
           ),
         ],
       ),
       drawer: const LeftMenu(),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const SizedBox(height: 50.0), // Space to move quote up
-            Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Text(
-                randomQuotes[currentQuoteIndex].text,
-                style: const TextStyle(
-                  color: Colors.white, // Text color
-                  fontSize: 20.0, // Adjust font size as needed
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            const SizedBox(height: 20.0), // Space between quote and buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Column(
-                  children: [
-                    IconButton(
-                      icon: FavoriteIcon(isLiked: isLiked), // Heart-shaped like button
-                      onPressed: () =>  _toggleLike(randomQuotes[currentQuoteIndex].id),
-                    ),
-                    const Text(
-                      'Like', // Text under the like button
-                      style:  TextStyle(
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 20.0), // Space between buttons
-                Column(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.share, color: Colors.white), // Share button
-                      onPressed: () {
-                        Share.share(randomQuotes[currentQuoteIndex].text);
-                      },
-                    ),
-                    const Text(
-                      'Share', // Text under the share button
-                      style: TextStyle(
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 50.0),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      currentQuoteIndex = currentQuoteIndex - 1;
-                    });
-                    checkIfLiked();
-                  },
-                  child: const Text('Previous  Quote'),
-                ),
-                const SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      currentQuoteIndex = currentQuoteIndex + 1;
-                    });
-                    checkIfLiked();
-                  },
-                  child: const Text('Next Quote'),
-                ),
-              ],
-            ),
-          ],
+        child: QuoteDisplay(
+          quote: randomQuotes[currentQuoteIndex],
+          isLiked: isLikedList[currentQuoteIndex],
+          onLikePressed: () => _toggleLike(randomQuotes[currentQuoteIndex].id),
+          onSharePressed: () {
+            Share.share(randomQuotes[currentQuoteIndex].text);
+          },
+          onPreviousPressed: () {
+            setState(() {
+              currentQuoteIndex = (currentQuoteIndex - 1) % randomQuotes.length;
+            });
+            checkIfLiked();
+          },
+          onNextPressed: () {
+            setState(() {
+              currentQuoteIndex = (currentQuoteIndex + 1) % randomQuotes.length;
+            });
+            checkIfLiked();
+          },
         ),
       ),
     );
   }
 }
+
+
+class QuoteDisplay extends StatelessWidget {
+  final Quote quote;
+  final bool isLiked;
+  final VoidCallback onLikePressed;
+  final VoidCallback onSharePressed;
+  final VoidCallback onPreviousPressed;
+  final VoidCallback onNextPressed;
+
+  const QuoteDisplay({
+    required this.quote,
+    required this.isLiked,
+    required this.onLikePressed,
+    required this.onSharePressed,
+    required this.onPreviousPressed,
+    required this.onNextPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const SizedBox(height: 50.0),
+        Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Text(
+            quote.text,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 20.0,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        const SizedBox(height: 20.0),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            LikeButton(
+              isLiked: isLiked,
+              onPressed: onLikePressed,
+            ),
+            const SizedBox(width: 20.0),
+            ShareButton(
+              onPressed: onSharePressed,
+            ),
+          ],
+        ),
+        const SizedBox(height: 75.0),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly, // Adjust as needed
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0), // Adjust the padding as needed
+              child: SizedBox(
+                width: 60.0, // Adjust the width as needed
+                height: 60.0, // Adjust the height as needed
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white, size: 60.0), // Adjust the icon size as needed
+                  onPressed: onPreviousPressed,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0), // Adjust the padding as needed
+              child: SizedBox(
+                width: 60.0, // Adjust the width as needed
+                height: 60.0, // Adjust the height as needed
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_forward, color: Colors.white, size: 60.0), // Adjust the icon size as needed
+                  onPressed: onNextPressed,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
