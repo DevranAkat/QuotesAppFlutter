@@ -33,25 +33,25 @@ class LikedQuotes extends StatefulWidget {
 
 class _LikedQuotesState extends State<LikedQuotes> {
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-  var quotesLiked = [];
-  List<bool> isLikedList = [];
+  List<Quote> quotesLiked = [];
 
   void getLikedQuotesList() async{
     final SharedPreferences prefs = await _prefs;
     setState(() {
-      quotesLiked = prefs.getStringList("likedQuotes") ?? [];
-      isLikedList = quotesLiked.map((id) => true).toList();
+      var likedQuotes = prefs.getStringList("likedQuotes") ?? [];
+      quotesLiked = quotes.where((quote) => likedQuotes.contains(quote.id.toString())).toList();
     });
   }
 
   Future<void> toggleLike(id) async {
     final SharedPreferences prefs = await _prefs;
     var likedQuotes = prefs.getStringList("likedQuotes") ?? [];
-    isLikedList[id] ? likedQuotes.remove(id.toString()) : likedQuotes.add(id.toString());;
+    likedQuotes.contains(id.toString()) ? likedQuotes.remove(id.toString()) : likedQuotes.add(id.toString());
     prefs.setStringList("likedQuotes", likedQuotes);
+    print(likedQuotes);
 
     setState(() {
-      isLikedList[id] = !isLikedList[id]; // Toggle like status for the specific quote
+      quotesLiked.firstWhere((element) => element.id == id).liked = likedQuotes.contains(id.toString());
     });
   }
 
@@ -69,10 +69,10 @@ class _LikedQuotesState extends State<LikedQuotes> {
         return ListTile(
           contentPadding: const EdgeInsets.all(16.0),
           title: Text(
-          quotes[int.parse(quotesLiked[index])].text,
+          quotesLiked[index].text,
             style: const TextStyle(
-                color: Colors.white, // Text color
-                fontSize: 20.0, // Adjust font size as needed
+                color: Colors.white,
+                fontSize: 20.0,
               ),
             ),
           trailing: Row(
@@ -80,14 +80,14 @@ class _LikedQuotesState extends State<LikedQuotes> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
-                icon: FavoriteIcon(isLiked: isLikedList[index]),
+                icon: FavoriteIcon(isLiked: quotesLiked[index].liked),
                 onPressed: () {
                   setState(() {
-                    toggleLike(index);
+                    toggleLike(quotesLiked[index].id);
                   });
                 },
               ),
-              ShareButton(onPressed: () => Share.share(quotes[int.parse(quotesLiked[index])].text)),
+              ShareButton(onPressed: () => Share.share(quotesLiked[index].text)),
             ],
           ),
         );

@@ -16,15 +16,12 @@ class _CategoriesPageState extends State<CategoriesPage> {
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
   String selectedCategory = '';
   List<Quote> filteredQuotes = [];
-  List<bool> isLikedList = [];
-  var quotesLiked = [];
-
+  List<String> quotesLiked = [];
 
   void getLikedQuotesList() async{
     final SharedPreferences prefs = await _prefs;
     setState(() {
       quotesLiked = prefs.getStringList("likedQuotes") ?? [];
-      isLikedList = quotesLiked.map((id) => true).toList();
     });
   }
   
@@ -66,12 +63,11 @@ class _CategoriesPageState extends State<CategoriesPage> {
 
   Future<void> toggleLike(id) async {
     final SharedPreferences prefs = await _prefs;
-    var likedQuotes = prefs.getStringList("likedQuotes") ?? [];
-    isLikedList[id] ? likedQuotes.remove(id.toString()) : likedQuotes.add(id.toString());;
-    prefs.setStringList("likedQuotes", likedQuotes);
+    quotesLiked.contains(id.toString()) ? quotesLiked.remove(id.toString()) : quotesLiked.add(id.toString());
+    prefs.setStringList("likedQuotes", quotesLiked);
 
     setState(() {
-      isLikedList[id] = !isLikedList[id]; // Toggle like status for the specific quote
+      quotes.firstWhere((element) => element.id == id).liked = quotesLiked.contains(id.toString());
     });
   }
 
@@ -107,10 +103,10 @@ class _CategoriesPageState extends State<CategoriesPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        icon: FavoriteIcon(isLiked: quotesLiked.contains(filteredQuotes[index].id)),
+                        icon: FavoriteIcon(isLiked: filteredQuotes[index].liked),
                         onPressed: () {
                           setState(() {
-                            // toggleLike(index);
+                            toggleLike(filteredQuotes[index].id);
                           });
                         },
                       ),

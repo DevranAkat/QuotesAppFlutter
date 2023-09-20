@@ -18,24 +18,21 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-  List<bool> isLikedList = List.generate(randomQuotes.length, (index) => false);
   int currentQuoteIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    checkIfLiked();
+    setLikeOnQuotes();
   }
 
-  void checkIfLiked() async {
+  void setLikeOnQuotes() async {
     final SharedPreferences prefs = await _prefs;
     var likedQuotesList = prefs.getStringList("likedQuotes") ?? [];
 
-    for (int i = 0; i < randomQuotes.length; i++) {
-      final int currentQuoteId = randomQuotes[i].id;
-      setState(() {
-        isLikedList[i] = likedQuotesList.contains(currentQuoteId.toString());
-      });
+    for (int i = 0; i < likedQuotesList.length; i++) {
+      final quote = quotes.firstWhere((element) => element.id.toString() == likedQuotesList[i]);
+      quote.liked = true;
     }
   }
 
@@ -43,14 +40,13 @@ class _HomePageState extends State<HomePage> {
     final SharedPreferences prefs = await _prefs;
     var likedQuotes = prefs.getStringList("likedQuotes") ?? [];
 
-    if (likedQuotes.contains(id.toString())) {
-      likedQuotes.remove(id.toString());
-    } else {
-      likedQuotes.add(id.toString());
-    }
+    likedQuotes.contains(id.toString()) ? likedQuotes.remove(id.toString()) : likedQuotes.add(id.toString());
 
     prefs.setStringList("likedQuotes", likedQuotes);
-    checkIfLiked();
+    
+    setState(() {
+      quotes.firstWhere((element) => element.id == id).liked = likedQuotes.contains(id.toString());
+    });
   }
 
   void _openSettingsPanel(BuildContext context) {
@@ -63,7 +59,7 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: const [
               Text(
-                'Settings',
+                'Notification settings',
                 style: TextStyle(
                   fontSize: 24.0,
                   fontWeight: FontWeight.bold,
@@ -97,7 +93,7 @@ class _HomePageState extends State<HomePage> {
       body: Center(
         child: QuoteDisplay(
           quote: randomQuotes[currentQuoteIndex],
-          isLiked: isLikedList[currentQuoteIndex],
+          isLiked: randomQuotes[currentQuoteIndex].liked,//[currentQuoteIndex],
           onLikePressed: () => _toggleLike(randomQuotes[currentQuoteIndex].id),
           onSharePressed: () {
             Share.share(randomQuotes[currentQuoteIndex].text);
@@ -106,13 +102,13 @@ class _HomePageState extends State<HomePage> {
             setState(() {
               currentQuoteIndex = (currentQuoteIndex - 1) % randomQuotes.length;
             });
-            checkIfLiked();
+            // checkIfLiked();
           },
           onNextPressed: () {
             setState(() {
               currentQuoteIndex = (currentQuoteIndex + 1) % randomQuotes.length;
             });
-            checkIfLiked();
+            // checkIfLiked();
           },
         ),
       ),
@@ -129,7 +125,7 @@ class QuoteDisplay extends StatelessWidget {
   final VoidCallback onPreviousPressed;
   final VoidCallback onNextPressed;
 
-  const QuoteDisplay({
+  const QuoteDisplay({super.key, 
     required this.quote,
     required this.isLiked,
     required this.onLikePressed,

@@ -3,9 +3,9 @@ class Quote {
   final String text;
   final String author;
   final String category;
-  int likes;
+  bool liked;
 
-  Quote({required this.id, required this.text, required this.author, required this.category,   this.likes = 0});
+  Quote({required this.id, required this.text, required this.author, required this.category, this.liked = false});
 }
 
 List<Quote> quotes = [
