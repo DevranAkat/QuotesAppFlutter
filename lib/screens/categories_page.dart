@@ -14,9 +14,27 @@ class CategoriesPage extends StatefulWidget {
 
 class _CategoriesPageState extends State<CategoriesPage> {
   final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
-  String selectedCategory = '';
+  late String selectedCategory;
   List<Quote> filteredQuotes = [];
   List<String> quotesLiked = [];
+  List<String> categories = quotes.map((quote) => quote.category).toSet().toList();
+  
+  @override
+  void initState() {
+    super.initState();
+    sortCategories();
+    filterQuotesByCategory('');
+    getLikedQuotesList();
+  }
+
+  void sortCategories() => categories.sort();
+  
+  void filterQuotesByCategory(String category) {
+    setState(() {
+      selectedCategory = category == '' ? categories[0] : category;
+      filteredQuotes = quotes.where((quote) => quote.category == selectedCategory).toList();
+    });
+  }
 
   void getLikedQuotesList() async{
     final SharedPreferences prefs = await _prefs;
@@ -24,41 +42,36 @@ class _CategoriesPageState extends State<CategoriesPage> {
       quotesLiked = prefs.getStringList("likedQuotes") ?? [];
     });
   }
-  
-  @override
-  void initState() {
-    super.initState();
-    filterQuotesByCategory('');
-    getLikedQuotesList();
-  }
-  
-  void filterQuotesByCategory(String category) {
-    setState(() {
-      selectedCategory = category;
-      filteredQuotes = quotes.where((quote) => quote.category == category).toList();
-    });
-  }
 
-  Widget buildCategoryButton(String category) {
-    return ElevatedButton(
-      onPressed: () => filterQuotesByCategory(category),
-      child: Text(category),
+  Widget buildCategoryDropdown() {
+    return Center(
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: DropdownButton<String>(
+          value: selectedCategory,
+          dropdownColor: Colors.black87,
+          onChanged: (newValue) {
+            setState(() {
+              selectedCategory = newValue!;
+              filterQuotesByCategory(newValue);
+            });
+          },
+          items: categories
+            .map((category) => DropdownMenuItem<String>(
+              value: category,
+              child: Text(
+                category,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 20.0,
+                ),
+              ),
+            ))
+            .toList(),
+        ),
+      ),
     );
-  }
-
-  List<Widget> buildCategoryButtons() {
-    List<String> categories = quotes.map((quote) => quote.category).toSet().toList();
-    List<Widget> buttons = [];
-
-    for (int i = 0; i < categories.length; i += 2) {
-      List<Widget> rowButtons = [];
-
-      for (int j = i; j < i + 2 && j < categories.length; j++) {
-        rowButtons.add(Expanded(child: buildCategoryButton(categories[j])));
-      }
-      buttons.add(Row(children: rowButtons));
-    }
-    return buttons;
   }
 
   Future<void> toggleLike(id) async {
@@ -78,12 +91,16 @@ class _CategoriesPageState extends State<CategoriesPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Favorites'),
+        title: const Text('Categories'),
       ),
       body: Column(
         children: [
-          Wrap(
-            children: buildCategoryButtons(),
+          Row(
+            children: [
+              Expanded(
+                child: buildCategoryDropdown(),
+              ),
+            ],
           ),
           const SizedBox(height: 20),
           Expanded(
